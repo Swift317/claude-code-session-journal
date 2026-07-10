@@ -1,0 +1,5 @@
+hook-errors.log
+hook-fired.log
+.session-summary
+cost-log.md
+cost-log.jsonl
