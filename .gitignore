@@ -3,3 +3,4 @@ hook-fired.log
 .session-summary
 cost-log.md
 cost-log.jsonl
+release-notes-*.md
