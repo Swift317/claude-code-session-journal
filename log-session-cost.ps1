@@ -23,6 +23,10 @@
 #                         .claude\hooks\log-session-cost.ps1)
 #   CCSJ_QUIET         - if "1", suppress hook-fired.log / hook-errors.log
 #                        default: unset (debug logs written next to script)
+#   CCSJ_UPLOAD_URL    - ccsj-web ingest endpoint (e.g. https://ccsj.dev/api/upload)
+#                        upload is skipped unless both URL and TOKEN are set
+#   CCSJ_UPLOAD_TOKEN  - machine token from ccsj-web (Machines > New > copy once)
+#                        used as Bearer token; treat as a secret
 #
 # Invocation modes:
 #   1. SessionEnd hook  : stdin JSON payload (transcript_path, session_id)
@@ -289,6 +293,20 @@ try {
     $utf8NoBom = [System.Text.UTF8Encoding]::new($false)
     [System.IO.File]::AppendAllText($mdFile,    $mdLine,    $utf8NoBom)
     [System.IO.File]::AppendAllText($jsonlFile, $jsonlLine, $utf8NoBom)
+
+    # ---- upload to ccsj-web (opt-in) ----
+    # Local write already succeeded; upload failures must not break the hook.
+    if ($env:CCSJ_UPLOAD_URL -and $env:CCSJ_UPLOAD_TOKEN) {
+        try {
+            $bodyBytes = $utf8NoBom.GetBytes($jsonlLine)
+            Invoke-RestMethod -Uri $env:CCSJ_UPLOAD_URL -Method Post `
+                -Body $bodyBytes -ContentType 'application/x-ndjson' `
+                -Headers @{ Authorization = "Bearer $($env:CCSJ_UPLOAD_TOKEN)" } `
+                -TimeoutSec 10 | Out-Null
+        } catch {
+            Write-ErrLog ('upload failed: {0}' -f $_.Exception.Message)
+        }
+    }
 
     exit 0
 } catch {

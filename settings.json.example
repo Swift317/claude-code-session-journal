@@ -5,7 +5,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\path\\to\\log-session-cost.ps1\""
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\path\\to\\log-session-cost.ps1\"",
+            "env": {
+              "CCSJ_UPLOAD_URL": "https://your-ccsj-web-host/api/upload",
+              "CCSJ_UPLOAD_TOKEN": "paste-machine-token-from-ccsj-web"
+            }
           }
         ]
       }

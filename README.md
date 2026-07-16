@@ -96,10 +96,59 @@ If the marker file is missing on SessionEnd, the entry is written with
 | `CCSJ_OUTPUT_DIR` | `%USERPROFILE%\.claude-code-session-journal` | Where `cost-log.md` and `cost-log.jsonl` live |
 | `CCSJ_SUMMARY_FILE` | `<script_dir>\..\.session-summary` | Path to the summary marker |
 | `CCSJ_QUIET` | (unset) | Set to `1` to suppress `hook-fired.log` / `hook-errors.log` |
+| `CCSJ_UPLOAD_URL` | (unset) | ccsj-web ingest endpoint. Uploads are skipped unless both this and `CCSJ_UPLOAD_TOKEN` are set. |
+| `CCSJ_UPLOAD_TOKEN` | (unset) | Bearer token issued when you register a machine in ccsj-web. Treat as a secret. |
 
 Per-project journal: set `CCSJ_OUTPUT_DIR` inside a project's
 `.claude\settings.json` via the hook `env` block, and each project gets its
 own log.
+
+## Sending sessions to ccsj-web (optional)
+
+[ccsj-web](https://github.com/Swift317/ccsj-web) is a hosted dashboard that
+turns these local logs into charts, tag rollups, and team aggregates.
+Enable uploads by setting two env vars:
+
+1. Register a machine at your ccsj-web instance and copy the token (shown
+   once).
+2. Add both env vars to your Claude Code `settings.json` under the hook's
+   `env` block:
+
+   ```json
+   {
+     "hooks": {
+       "SessionEnd": [
+         {
+           "hooks": [
+             {
+               "type": "command",
+               "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\path\\to\\log-session-cost.ps1\"",
+               "env": {
+                 "CCSJ_UPLOAD_URL": "https://your-ccsj-web-host/api/upload",
+                 "CCSJ_UPLOAD_TOKEN": "paste-machine-token-here"
+               }
+             }
+           ]
+         }
+       ]
+     }
+   }
+   ```
+
+3. (Optional) Backfill existing sessions:
+
+   ```powershell
+   $env:CCSJ_UPLOAD_URL   = "https://your-ccsj-web-host/api/upload"
+   $env:CCSJ_UPLOAD_TOKEN = "paste-machine-token-here"
+   powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\backfill-upload.ps1
+   ```
+
+   The server dedupes on `(machine_id, session_id_ext)`, so re-running is
+   safe.
+
+Local writes to `cost-log.md` / `cost-log.jsonl` happen first and always
+succeed even if the upload fails, so the journal stays intact when you're
+offline or the server is down.
 
 ## Output files
 
