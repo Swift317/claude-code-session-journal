@@ -107,7 +107,8 @@ own log.
 
 [ccsj-web](https://github.com/Swift317/ccsj-web) is a hosted dashboard that
 turns these local logs into charts, tag rollups, and team aggregates.
-Enable uploads by setting two env vars:
+A hosted instance is live at **<https://ccsj-web.vercel.app>** — free for
+personal use. Enable uploads by setting two env vars:
 
 1. Register a machine at your ccsj-web instance and copy the token (shown
    once).
