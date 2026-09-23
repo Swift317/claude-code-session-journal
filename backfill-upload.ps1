@@ -60,6 +60,19 @@ try {
         -TimeoutSec 60
     Write-Host ("done. inserted={0} skipped={1} total={2}" -f $resp.inserted, $resp.skipped, $resp.total)
 } catch {
-    Write-Error ('upload failed: {0}' -f $_.Exception.Message)
+    # Surface the server's error body (the API returns {"error": "..."} with details).
+    $detail = ''
+    try {
+        $stream = $_.Exception.Response.GetResponseStream()
+        if ($stream) {
+            $reader = New-Object System.IO.StreamReader($stream)
+            $detail = $reader.ReadToEnd()
+        }
+    } catch {}
+    if ($detail) {
+        Write-Error ('upload failed: {0} | server response: {1}' -f $_.Exception.Message, $detail)
+    } else {
+        Write-Error ('upload failed: {0}' -f $_.Exception.Message)
+    }
     exit 1
 }
